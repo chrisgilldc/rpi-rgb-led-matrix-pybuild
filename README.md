@@ -1,9 +1,7 @@
-# **Working fork for testing updated Python binding build.**
-
 Controlling RGB LED display with Raspberry Pi GPIO
 ==================================================
 
-A library to control commonly available 64x64, 32x32 or 16x32 RGB LED panels
+A library to control commonly available 128x64, 64x64, 32x32 or 16x32 RGB LED panels
 with the Raspberry Pi. Can support PWM up to 11Bit per channel, providing
 true 24bpp color with CIE1931 profile.
 
@@ -161,12 +159,13 @@ This documentation is split into parts that help you through the process
 - <a href="wiring.md"><img src="img/wire-up-icon.png"></a>
     [**Wire up the matrix to your Pi**](./wiring.md). This document describes
     what goes where.
-- [How to map pixels between panels or within panels](./lib). This is crutial for figuring out pixel mappers,
+- [How to map pixels between panels or within panels](./lib). This is crucial for figuring out pixel mappers,
   matrix mappers and so forth. This is where you will learn about panel layout with U-Mapper, V-Mapper, V-Mapper:Z
 - [Adapter GPIO boards output to up to 3 channels (electrodragon board recommended)](./adapter).
     If you have an [Adafruit HAT] or [Adafruit Bonnet], you can choose that with
     a command line option [described below](#if-you-have-an-adafruit-hat-or-bonnet)
 - [All the command line options you can give to demo and in turn use in your library code](./examples-api-use).
+- [Installing an RT Kernel to fix most flickering issues](./RT-kernel)
 
 Python Support
 --------------
@@ -265,7 +264,7 @@ choose these here:
 This can have values such as
   - `--led-gpio-mapping=regular` The standard mapping of this library, described in the [wiring](./wiring.md) page.
   - `--led-gpio-mapping=adafruit-hat` The Adafruit HAT/Bonnet, that uses this library or
-  - `--led-gpio-mapping=adafruit-hat-pwm` Adafruit HAT with the anti-flicker hardware mod [described below](#improving-flicker).
+  - `--led-gpio-mapping=adafruit-hat-pwm` Adafruit HAT with the anti- hardware mod [described below](#improving-flicker-hardware-patch).
   - `--led-gpio-mapping=compute-module` Additional 3 parallel chains can be used with the Compute Module.
 
 Learn more about the mappings in the [wiring documentation](wiring.md#alternative-hardware-mappings).
@@ -782,7 +781,7 @@ flag.
 Just pass the option `--led-gpio-mapping=adafruit-hat`. This works on the C++
 and Python examples.
 
-### Improving flicker
+### Improving flicker: hardware patch
 
 To improve flicker, we need to do a little hardware modification,
 but it is very simple: solder a wire between GPIO 4 and 18 as shown in the
@@ -794,6 +793,10 @@ Then, start your programs with `--led-gpio-mapping=adafruit-hat-pwm`.
 
 Now you should have less visible flicker. This essentially
 switches on the hardware pulses feature for the Adafruit HAT/Bonnet.
+
+### Improving flicker: Real Time Kernel
+See [Installing an RT Kernel to fix most flickering issues](./RT-kernel)
+
 
 ### 64x64 with E-line on Adafruit HAT/Bonnet
 There are LED panels that have 64x64 LEDs packed, but they need 5 address lines,
@@ -880,9 +883,8 @@ the refresh rate.
 
 If you have a loaded system and one of the newer Pis with 4 cores, you can
 reserve one core just for the refresh of the display. Add:
-
 ```
-isolcpus=3
+isolcpus=domain,managed_irq,3 nohz_full=3 rcu_nocbs=3 irqaffinity=0,1,2
 ```
 
 to the end of the line in `/boot/cmdline.txt` (pre-bookworm) or
@@ -890,6 +892,9 @@ to the end of the line in `/boot/cmdline.txt` (pre-bookworm) or
 line as the existing arguments -- no newline. This will use the last core
 only to refresh the display then, but it also means, that no other process can
 utilize it then. Still, I'd typically recommend it.
+
+This is just a partial fix, if you need better, please look at
+[installing an RT Kernel to fix most flickering issues](./RT-kernel)
 
 Limitations
 -----------

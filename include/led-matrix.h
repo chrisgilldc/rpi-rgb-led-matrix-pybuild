@@ -410,9 +410,9 @@ struct RuntimeOptions {
   // even offered via the command line flags.
   // ----------
 
-  // There are three possible values here
   //   -1 : don't leave choice of becoming daemon to the command line
   //        parsing. If set to -1, the --led-daemon option is not offered.
+  //    0 : do not become a daemon, run in foreground (default value)
   //    0 : do not becoma a daemon, run in forgreound (default value)
   //    1 : become a daemon, run in background.
   //
@@ -481,7 +481,7 @@ int main(int argc, char **argv) {
 */
 // This parses the flags from argv and updates the structs with the parsed-out
 // values. Structs can be NULL if you are not interested in it.
-//
+// The recognized flags are removed from argv if "remove_consumed_flags" is
 // The recognized flags are removed from argv if "remove_consumed_flags" is
 // true; this simplifies your command line processing for the remaining options.
 //
